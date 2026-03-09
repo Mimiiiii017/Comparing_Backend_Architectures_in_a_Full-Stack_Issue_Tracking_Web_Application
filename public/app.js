@@ -37,12 +37,14 @@ function toggleTheme() {
   const html = document.documentElement;
   const isDark = html.getAttribute('data-theme') === 'dark';
   html.setAttribute('data-theme', isDark ? 'light' : 'dark');
-  document.querySelector('.theme-btn').textContent = isDark ? '☀︎' : '☾';
+  const btn = document.querySelector('.theme-btn') || document.querySelector('.theme-toggle');
+  if (btn) btn.textContent = isDark ? '☀︎' : '☾';
   localStorage.setItem('vtv-theme', isDark ? 'light' : 'dark');
-  redrawCharts();
+  if (document.getElementById('app')) redrawCharts();
 }
 
 // ── Init — check session on page load ─────────────────────────────────────────
+if (document.getElementById('app')) {
 (async function init() {
   // Restore theme first
   const saved = localStorage.getItem('vtv-theme') || 'light';
@@ -78,6 +80,7 @@ function toggleTheme() {
 
   loadAll();
 })();
+}
 
 // ── Logout ─────────────────────────────────────────────────────────────────────
 async function doLogout() {
@@ -303,7 +306,7 @@ async function findPosition() {
   }
 }
 
-document.getElementById('wacInput').addEventListener('keydown', e => { if (e.key === 'Enter') findPosition(); });
+if (document.getElementById('wacInput')) document.getElementById('wacInput').addEventListener('keydown', e => { if (e.key === 'Enter') findPosition(); });
 
 // ── Case search ────────────────────────────────────────────────────────────────
 async function searchByCase() {
@@ -356,4 +359,53 @@ function renderSearchResults(rows, loading = false) {
   `;
 }
 
-document.getElementById('searchCaseInput').addEventListener('keydown', e => { if (e.key === 'Enter') searchByCase(); });
+if (document.getElementById('searchCaseInput')) document.getElementById('searchCaseInput').addEventListener('keydown', e => { if (e.key === 'Enter') searchByCase(); });
+
+// ── Login page ──────────────────────────────────────────────────────────────────
+if (document.getElementById('passwordInput')) {
+  const saved = localStorage.getItem('vtv-theme') || 'light';
+  document.documentElement.setAttribute('data-theme', saved);
+  const btn = document.querySelector('.theme-toggle');
+  if (btn) btn.textContent = saved === 'dark' ? '☾' : '☀︎';
+
+  fetch('/api/me', { credentials: 'include' })
+    .then(r => r.ok ? r.json() : null)
+    .then(d => { if (d?.role) window.location.href = '/dashboard'; })
+    .catch(() => {});
+
+  document.getElementById('passwordInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+}
+
+async function doLogin() {
+  const pw = document.getElementById('passwordInput').value.trim();
+  if (!pw) return;
+  const btn     = document.getElementById('loginBtn');
+  const spinner = document.getElementById('loginSpinner');
+  const label   = document.getElementById('loginBtnLabel');
+  btn.disabled = true;
+  spinner.classList.add('visible');
+  label.textContent = 'Signing in…';
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `password=${encodeURIComponent(pw)}`,
+      credentials: 'include',
+    });
+    if (res.ok) {
+      window.location.href = '/dashboard';
+    } else {
+      document.getElementById('loginError').style.display = 'block';
+      btn.disabled = false;
+      spinner.classList.remove('visible');
+      label.textContent = 'Sign In';
+    }
+  } catch {
+    document.getElementById('loginError').style.display = 'block';
+    btn.disabled = false;
+    spinner.classList.remove('visible');
+    label.textContent = 'Sign In';
+  }
+}

@@ -624,6 +624,21 @@ select:focus, input[type="month"]:focus, input[type="date"]:focus {
 /* ── EMPTY / LOADING ─────────────────────────────────────────────────────────── */
 .empty   { text-align: center; padding: 32px; color: var(--muted); font-size: 14px; }
 .loading { text-align: center; padding: 20px; color: var(--muted); font-size: 13px; }
-
+/* ── THEME TOGGLE (login page — fixed position) ────────────────────────────────────── */
+.theme-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  color: var(--text);
+  z-index: 10;
+  transition: all 0.2s;
+}
+.theme-toggle:hover { border-color: var(--accent); }
 /* ── APP HIDDEN ──────────────────────────────────────────────────────────────── */
 #app { display: none; }
