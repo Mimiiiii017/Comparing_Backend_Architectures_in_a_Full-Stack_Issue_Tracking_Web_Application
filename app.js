@@ -29,6 +29,7 @@ const STATUS_COLORS = {
   biometrics:   '#b1cc16',
   others:       '#a8a29e',
   nan:          '#e2e8f0',
+  transferred:  '#f97316',
 };
 
 function colorFor(s) { return STATUS_COLORS[(s||'').toLowerCase()] || '#94a3b8'; }
@@ -182,8 +183,8 @@ function updateArchBadge() {
   // Update page subtitle
   document.getElementById('pageSub').textContent =
     currentArch === 'A'
-      ? 'I-129F K-1/K-2 case tracking — Architecture A (Monolithic)'
-      : 'I-129F K-1/K-2 case tracking — Architecture B (Modular)';
+      ? 'Case tracking — Architecture A (Monolithic)'
+      : 'Case tracking — Architecture B (Modular)';
 }
 
 // ── Load all ───────────────────────────────────────────────────────────────────
@@ -278,7 +279,7 @@ function buildPie(canvasId, labels, data, colors, legendId) {
 
 const STACK_ORDER = [
   'received', 'processing', 'notice', 'approval', 'rfe', 'rfe_response',
-  'biometrics', 'expedite', 'withdrawal', 'others', 'nan', 'denied', 'rejected',
+  'biometrics', 'expedite', 'withdrawal', 'transferred', 'others', 'nan', 'denied', 'rejected',
 ];
 
 function toStackedDatasets(data) {
@@ -338,10 +339,25 @@ async function loadByDay() {
 
     const data = d.data || {};
     const allStatuses = new Set();
-    Object.values(data).forEach(dd => Object.keys(dd).forEach(s => allStatuses.add(s)));
-    const datasets = Array.from(allStatuses).map(status => ({
+    Object.values(data).forEach(dd => Object.keys(dd).forEach(s => allStatuses.add(s.toLowerCase())));
+
+    const sorted = Array.from(allStatuses).sort((a, b) => {
+      const ai = STACK_ORDER.indexOf(a);
+      const bi = STACK_ORDER.indexOf(b);
+      if (ai === -1 && bi === -1) return a.localeCompare(b);
+      if (ai === -1) return 1;
+      if (bi === -1) return -1;
+      return ai - bi;
+    });
+
+    const datasets = sorted.map(status => ({
       label: status,
-      data: allDayKeys.map(day => (data[day] && data[day][status]) || 0),
+      data: allDayKeys.map(day => {
+        const entry = data[day];
+        if (!entry) return 0;
+        const key = Object.keys(entry).find(k => k.toLowerCase() === status);
+        return key ? entry[key] : 0;
+      }),
       backgroundColor: colorFor(status),
       stack: 'stack',
     }));
