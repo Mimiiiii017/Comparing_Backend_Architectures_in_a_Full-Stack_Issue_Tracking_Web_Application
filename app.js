@@ -11,11 +11,11 @@ let API = API_A;
 
 // ── Status colours ─────────────────────────────────────────────────────────────
 const STATUS_COLORS = {
-  received:     '#3b82f6',
+  received:     '#498dfa',
   approved:     '#0ea800',
   approval:     '#0ea800',
-  rejected:     '#700000',
-  rejection:    '#700000',
+  rejected:     '#9b0000',
+  rejection:    '#9b0000',
   rfe:          '#f59e0b',
   rfer:         '#8b5cf6',
   rfe_response: '#8b5cf6',
@@ -260,7 +260,18 @@ function buildPie(canvasId, labels, data, colors) {
           position: 'right',
           labels: {
             color: isDark ? '#f0ebe3' : '#1a1714',
-            font: { size: 12 }, padding: 14
+            font: { size: 12 }, padding: 14,
+            generateLabels: (chart) => {
+              const dataset = chart.data.datasets[0];
+              return chart.data.labels.map((label, i) => ({
+                text: `${label}  (${dataset.data[i]})`,
+                fillStyle: Array.isArray(dataset.backgroundColor) ? dataset.backgroundColor[i] : dataset.backgroundColor,
+                strokeStyle: isDark ? '#1e1b18' : '#ffffff',
+                lineWidth: 2,
+                index: i,
+                hidden: false,
+              }));
+            }
           }
         },
         tooltip: {
@@ -305,8 +316,27 @@ async function loadByDay() {
   try {
     const res = await fetch(`${API}/api/charts/by-day?month=${month}`, { credentials: 'include' });
     const d = await res.json();
-    const { labels, datasets } = toStackedDatasets(d.data);
-    buildStackedBar('chartByDay', labels, datasets, 'legendByDay');
+
+    // Generate every day in the selected month
+    const [year, mon] = month.split('-').map(Number);
+    const daysInMonth = new Date(year, mon, 0).getDate();
+    const allDayKeys = Array.from({ length: daysInMonth }, (_, i) => {
+      const day = String(i + 1).padStart(2, '0');
+      return `${month}-${day}`;
+    });
+    const displayLabels = allDayKeys.map(k => String(parseInt(k.split('-')[2])));
+
+    const data = d.data || {};
+    const allStatuses = new Set();
+    Object.values(data).forEach(dd => Object.keys(dd).forEach(s => allStatuses.add(s)));
+    const datasets = Array.from(allStatuses).map(status => ({
+      label: status,
+      data: allDayKeys.map(day => (data[day] && data[day][status]) || 0),
+      backgroundColor: colorFor(status),
+      stack: 'stack',
+    }));
+
+    buildStackedBar('chartByDay', displayLabels, datasets, 'legendByDay');
   } catch {}
 }
 
