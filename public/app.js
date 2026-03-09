@@ -2,8 +2,6 @@
 const API_A = 'https://caseflow-0m57.onrender.com';   // Architecture A — Monolithic
 const API_B = 'https://caseflow-h1es.onrender.com';   // Architecture B — Modular
 
-
-
 // ── State ─────────────────────────────────────────────────────────────────────
 let currentRole = null;
 let currentArch = 'A';
@@ -44,49 +42,34 @@ function toggleTheme() {
   redrawCharts();
 }
 
-// ── Auth ───────────────────────────────────────────────────────────────────────
-async function doLogin() {
-  const pw = document.getElementById('passwordInput').value.trim();
-  if (!pw) return;
+// ── Init — check session on page load ─────────────────────────────────────────
+(async function init() {
+  // Restore theme first
+  const saved = localStorage.getItem('vtv-theme') || 'light';
+  document.documentElement.setAttribute('data-theme', saved);
+  document.querySelector('.theme-btn').textContent = saved === 'dark' ? '☾' : '☀︎';
 
-  const match = PASSWORDS[pw];
-  if (!match) {
-    document.getElementById('loginError').style.display = 'block';
+  // Verify session server-side
+  try {
+    const res = await fetch('/api/me', { credentials: 'include' });
+    if (!res.ok) { window.location.href = '/'; return; }
+    const { role } = await res.json();
+    currentRole = role;
+  } catch {
+    window.location.href = '/';
     return;
   }
 
-  const btn    = document.getElementById('loginBtn');
-  const spinner = document.getElementById('loginSpinner');
-  const label  = document.getElementById('loginBtnLabel');
-  btn.disabled = true;
-  spinner.classList.add('visible');
-  label.textContent = 'Signing in…';
-
-  // Login against the API
+  // Also authenticate against the Render API so charts work
   try {
     const fd = new FormData();
-    fd.append('password', pw);
-    await fetch(`${match.api}/login`, {
-      method: 'POST', body: fd, credentials: 'include', redirect: 'manual'
-    });
+    fd.append('password', 'VTV404');
+    await fetch(`${API_A}/login`, { method:'POST', body:fd, credentials:'include', redirect:'manual' });
   } catch {}
 
-  currentRole = match.role;
-  API = match.api;
-
-  btn.disabled = false;
-  spinner.classList.remove('visible');
-  label.textContent = 'Sign In';
-  document.getElementById('loginError').style.display = 'none';
-
-  showApp();
-}
-
-function showApp() {
-  document.getElementById('loginScreen').style.display = 'none';
+  // Show app
   document.getElementById('app').style.display = 'block';
 
-  // Show arch nav only for tester
   if (currentRole === 'tester') {
     document.getElementById('archNav').style.display = 'flex';
     document.getElementById('archBadge').style.display = 'block';
@@ -94,24 +77,16 @@ function showApp() {
   }
 
   loadAll();
-}
+})();
 
-function doLogout() {
-  fetch(`${API}/logout`, { credentials: 'include' }).finally(() => {
-    document.getElementById('app').style.display = 'none';
-    document.getElementById('loginScreen').style.display = 'flex';
-    document.getElementById('passwordInput').value = '';
-    document.getElementById('archNav').style.display = 'none';
-    document.getElementById('archBadge').style.display = 'none';
-    currentRole = null;
-    currentArch = 'A';
-    API = API_A;
-  });
+// ── Logout ─────────────────────────────────────────────────────────────────────
+async function doLogout() {
+  try {
+    await fetch(`${API}/logout`, { credentials: 'include' });
+    await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+  } catch {}
+  window.location.href = '/';
 }
-
-document.getElementById('passwordInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') doLogin();
-});
 
 // ── Architecture switching ─────────────────────────────────────────────────────
 async function switchArch(arch) {
@@ -119,22 +94,16 @@ async function switchArch(arch) {
   currentArch = arch;
   API = arch === 'A' ? API_A : API_B;
 
-  // Update tab styles
   document.getElementById('tabA').classList.toggle('active', arch === 'A');
   document.getElementById('tabB').classList.toggle('active', arch === 'B');
-
   updateArchBadge();
 
-  // Login against new API with tester password
   try {
     const fd = new FormData();
-    fd.append('password', 'VTV404'); // both APIs share same password
-    await fetch(`${API}/login`, {
-      method: 'POST', body: fd, credentials: 'include', redirect: 'manual'
-    });
+    fd.append('password', 'VTV404');
+    await fetch(`${API}/login`, { method:'POST', body:fd, credentials:'include', redirect:'manual' });
   } catch {}
 
-  // Reload everything from new API
   loadAll();
 }
 
@@ -147,8 +116,6 @@ function updateArchBadge() {
     badge.textContent = 'Arch B — Modular';
     badge.className = 'arch-badge badge-b';
   }
-
-  // Update page subtitle
   document.getElementById('pageSub').textContent =
     currentArch === 'A'
       ? 'I-129F K-1/K-2 case tracking — Architecture A (Monolithic)'
@@ -182,7 +149,7 @@ function buildStackedBar(canvasId, labels, datasets, legendId) {
   if (existing) existing.destroy();
 
   const isDark    = document.documentElement.getAttribute('data-theme') === 'dark';
-  const gridColor = isDark ? 'rgba(175, 201, 240, 0.22)' : 'rgba(0,0,0,0.06)';
+  const gridColor = isDark ? 'rgba(175,201,240,0.22)' : 'rgba(0,0,0,0.06)';
   const tickColor = isDark ? '#c6d3e9' : '#4f6482';
 
   new Chart(document.getElementById(canvasId).getContext('2d'), {
@@ -216,10 +183,7 @@ function buildPie(canvasId, labels, data, colors) {
     type: 'doughnut',
     data: {
       labels,
-      datasets: [{
-        data, backgroundColor: colors, borderWidth: 2,
-        borderColor: isDark ? '#1e1b18' : '#ffffff'
-      }],
+      datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: isDark ? '#2b3445' : '#ffffff' }],
     },
     options: {
       responsive: true,
@@ -227,10 +191,7 @@ function buildPie(canvasId, labels, data, colors) {
       plugins: {
         legend: {
           position: 'right',
-          labels: {
-            color: isDark ? '#f0ebe3' : '#1a1714',
-            font: { size: 12 }, padding: 14
-          }
+          labels: { color: isDark ? '#eef4ff' : '#18283f', font: { size: 12 }, padding: 14 }
         },
         tooltip: {
           callbacks: {
@@ -396,8 +357,3 @@ function renderSearchResults(rows, loading = false) {
 }
 
 document.getElementById('searchCaseInput').addEventListener('keydown', e => { if (e.key === 'Enter') searchByCase(); });
-
-// ── Init ───────────────────────────────────────────────────────────────────────
-const savedTheme = localStorage.getItem('vtv-theme') || 'light';
-document.documentElement.setAttribute('data-theme', savedTheme);
-document.querySelector('.theme-btn').textContent = savedTheme === 'dark' ? '☾' : '☀︎';

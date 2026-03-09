@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Visa to Vows — Case Dashboard</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon.png?v=2"/>
+<link rel="shortcut icon" type="image/png" href="favicon.png?v=2"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div id="app" style="display:none">
+  <header>
+    <div class="header-left">
+      <div class="header-brand">
+        <div class="header-logo">VTV</div>
+        <span class="header-name">Visa to Vows</span>
+      </div>
+      <nav class="arch-nav" id="archNav" style="display:none">
+        <button class="arch-tab active" id="tabA" onclick="switchArch('A')">
+          <span class="arch-dot dot-a"></span>Architecture A — Monolithic
+        </button>
+        <button class="arch-tab" id="tabB" onclick="switchArch('B')">
+          <span class="arch-dot dot-b"></span>Architecture B — Modular
+        </button>
+      </nav>
+    </div>
+    <div class="header-actions">
+      <div class="arch-badge" id="archBadge" style="display:none"></div>
+      <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme">☀︎</button>
+      <button class="logout-btn" onclick="doLogout()">Sign out</button>
+    </div>
+  </header>
+
+  <div class="page">
+    <div class="page-title">Case Dashboard</div>
+    <p class="page-sub" id="pageSub">I-129F K-1/K-2 visa case tracking</p>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total Cases</div>
+        <div class="stat-value" id="statTotal">—</div>
+        <div class="stat-detail">in database</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Top Status</div>
+        <div class="stat-value" id="statStatus" style="font-size:18px;padding-top:6px">—</div>
+        <div class="stat-detail">most common</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Last Import</div>
+        <div class="stat-value" id="statImport" style="font-size:16px;padding-top:8px">—</div>
+        <div class="stat-detail">data freshness</div>
+      </div>
+    </div>
+
+    <!-- Chart 1: By Month -->
+    <div class="section">
+      <div class="section-title">Applications by Month Filed</div>
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Monthly breakdown by status</div>
+            <div class="card-sub">Based on Application Filed Date — stacked by case status</div>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="chartByMonth"></canvas></div>
+        <div class="legend" id="legendByMonth"></div>
+      </div>
+    </div>
+
+    <!-- Chart 2: By Day within Month -->
+    <div class="section">
+      <div class="section-title">Daily Breakdown within a Month</div>
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Applications per day — choose a month</div>
+            <div class="card-sub">Based on Application Filed Date</div>
+          </div>
+          <div class="controls">
+            <input type="month" id="byDayMonth" value="2025-08"/>
+            <button class="btn-secondary" onclick="loadByDay()">View</button>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="chartByDay"></canvas></div>
+        <div class="legend" id="legendByDay"></div>
+      </div>
+    </div>
+
+    <!-- Pie Charts -->
+    <div class="section">
+      <div class="section-title">Status Breakdowns</div>
+      <div class="charts-grid">
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Status share — by month</div>
+              <div class="card-sub">Application Filed Date</div>
+            </div>
+            <div class="controls">
+              <input type="month" id="pieMonthInput" value="2025-08"/>
+              <button class="btn-secondary" onclick="loadPieMonth()">View</button>
+            </div>
+          </div>
+          <div class="chart-wrap" style="height:240px"><canvas id="chartPieMonth"></canvas></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Status share — by day filed</div>
+              <div class="card-sub">Application Filed Date</div>
+            </div>
+            <div class="controls">
+              <input type="date" id="pieDayFiledInput" value="2025-08-01"/>
+              <button class="btn-secondary" onclick="loadPieDayFiled()">View</button>
+            </div>
+          </div>
+          <div class="chart-wrap" style="height:240px"><canvas id="chartPieDayFiled"></canvas></div>
+        </div>
+
+        <div class="card" style="grid-column: 1 / -1;">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Cases worked on a specific day</div>
+              <div class="card-sub">Based on Last Received Date — shows what was processed that day</div>
+            </div>
+            <div class="controls">
+              <input type="date" id="pieDayWorkedInput" value="2025-08-05"/>
+              <button class="btn-secondary" onclick="loadPieDayWorked()">View</button>
+            </div>
+          </div>
+          <div style="max-width:400px;margin:0 auto">
+            <div class="chart-wrap" style="height:260px"><canvas id="chartPieDayWorked"></canvas></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- WAC Position Finder -->
+    <div class="section">
+      <div class="section-title">Your Queue Position</div>
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Find your place in line</div>
+            <div class="card-sub">Enter your WAC number to see how many pending cases were filed before yours</div>
+          </div>
+        </div>
+        <div class="search-box">
+          <input class="search-input" type="text" id="wacInput" placeholder="e.g. WAC2590183266" maxlength="20"/>
+          <button class="btn-secondary" onclick="findPosition()">Find Position</button>
+        </div>
+        <div class="position-result" id="positionResult">
+          <div class="position-number" id="positionNumber">—</div>
+          <div class="position-label">cases filed before yours are still pending</div>
+          <div class="position-meta" id="positionMeta"></div>
+        </div>
+        <div id="positionError" style="display:none;color:#ef4444;font-size:13px;margin-top:10px"></div>
+      </div>
+    </div>
+
+    <!-- Case Search -->
+    <div class="section">
+      <div class="section-title">Case Search</div>
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Search by case number or date</div>
+            <div class="card-sub">Find a specific case or all cases received on a particular day</div>
+          </div>
+        </div>
+        <div class="search-box">
+          <input class="search-input" type="text" id="searchCaseInput" placeholder="WAC number (e.g. WAC2590183266)"/>
+          <button class="btn-secondary" onclick="searchByCase()">Search</button>
+        </div>
+        <div class="search-box">
+          <input type="date" id="searchDateInput"/>
+          <button class="btn-secondary" onclick="searchByDate()">Search by Date</button>
+        </div>
+        <div id="searchResults"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
