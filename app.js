@@ -237,7 +237,7 @@ function buildStackedBar(canvasId, labels, datasets, legendId) {
   }
 }
 
-function buildPie(canvasId, labels, data, colors) {
+function buildPie(canvasId, labels, data, colors, legendId) {
   const existing = Chart.getChart(canvasId);
   if (existing) existing.destroy();
 
@@ -256,24 +256,7 @@ function buildPie(canvasId, labels, data, colors) {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: {
-          position: 'right',
-          labels: {
-            color: isDark ? '#f0ebe3' : '#1a1714',
-            font: { size: 12 }, padding: 14,
-            generateLabels: (chart) => {
-              const dataset = chart.data.datasets[0];
-              return chart.data.labels.map((label, i) => ({
-                text: `${label}  (${dataset.data[i]})`,
-                fillStyle: Array.isArray(dataset.backgroundColor) ? dataset.backgroundColor[i] : dataset.backgroundColor,
-                strokeStyle: isDark ? '#1e1b18' : '#ffffff',
-                lineWidth: 2,
-                index: i,
-                hidden: false,
-              }));
-            }
-          }
-        },
+        legend: { display: false },
         tooltip: {
           callbacks: {
             label: ctx => {
@@ -285,6 +268,12 @@ function buildPie(canvasId, labels, data, colors) {
       },
     },
   });
+
+  if (legendId) {
+    document.getElementById(legendId).innerHTML = labels.map((label, i) =>
+      `<div class="legend-item"><div class="legend-dot" style="background:${colors[i]}"></div>${label} <span class="legend-count">(${data[i]})</span></div>`
+    ).join('');
+  }
 }
 
 function toStackedDatasets(data) {
@@ -346,7 +335,7 @@ async function loadPieMonth() {
   try {
     const res = await fetch(`${API}/api/charts/pie-month?month=${month}`, { credentials: 'include' });
     const d = await res.json();
-    buildPie('chartPieMonth', d.data.map(r=>r.status), d.data.map(r=>r.count), d.data.map(r=>colorFor(r.status)));
+    buildPie('chartPieMonth', d.data.map(r=>r.status), d.data.map(r=>r.count), d.data.map(r=>colorFor(r.status)), 'legendPieMonth');
   } catch {}
 }
 
@@ -357,7 +346,7 @@ async function loadPieDayFiled() {
     const res = await fetch(`${API}/api/charts/pie-day-filed?date=${date}`, { credentials: 'include' });
     const d = await res.json();
     if (!d.data.length) return;
-    buildPie('chartPieDayFiled', d.data.map(r=>r.status), d.data.map(r=>r.count), d.data.map(r=>colorFor(r.status)));
+    buildPie('chartPieDayFiled', d.data.map(r=>r.status), d.data.map(r=>r.count), d.data.map(r=>colorFor(r.status)), 'legendPieDayFiled');
   } catch {}
 }
 
@@ -368,7 +357,7 @@ async function loadPieDayWorked() {
     const res = await fetch(`${API}/api/charts/pie-day-worked?date=${date}`, { credentials: 'include' });
     const d = await res.json();
     if (!d.data.length) return;
-    buildPie('chartPieDayWorked', d.data.map(r=>r.status), d.data.map(r=>r.count), d.data.map(r=>colorFor(r.status)));
+    buildPie('chartPieDayWorked', d.data.map(r=>r.status), d.data.map(r=>r.count), d.data.map(r=>colorFor(r.status)), 'legendPieDayWorked');
   } catch {}
 }
 

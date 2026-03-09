@@ -366,7 +366,8 @@ header {
 .logout-btn:hover { border-color: var(--accent); color: var(--accent); }
 
 /* ── PAGE ────────────────────────────────────────────────────────────────────── */
-.page { max-width: 1200px; margin: 0 auto; padding: 40px 24px 80px; }
+.page { max-width: 1200px; margin: 0 auto; padding: 40px 20px 80px; }
+@media (max-width: 600px) { .page { padding: 24px 12px 60px; } }
 
 .page-title {
   font-family: var(--font-serif);
@@ -423,9 +424,10 @@ header {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 28px;
+  padding: 24px;
   box-shadow: var(--shadow);
 }
+@media (max-width: 600px) { .card { padding: 16px; } }
 
 .card-header {
   display: flex;
@@ -484,13 +486,14 @@ select:focus, input[type="month"]:focus, input[type="date"]:focus {
   gap: 20px;
 }
 
-@media (max-width: 768px) { .charts-grid { grid-template-columns: 1fr; } }
+@media (max-width: 860px) { .charts-grid { grid-template-columns: 1fr; } }
 
 .chart-wrap { position: relative; height: 280px; }
 
-.legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 12px; }
 .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); }
-.legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+.legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+.legend-count { opacity: 0.75; }
 
 /* ── SEARCH ──────────────────────────────────────────────────────────────────── */
 .search-box {
