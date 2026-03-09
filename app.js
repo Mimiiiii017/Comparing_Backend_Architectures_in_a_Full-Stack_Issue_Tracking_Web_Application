@@ -11,14 +11,24 @@ let API = API_A;
 
 // ── Status colours ─────────────────────────────────────────────────────────────
 const STATUS_COLORS = {
-  received:  '#3b82f6',
-  approved:  '#10b981',
-  rejected:  '#ef4444',
-  rfe:       '#f59e0b',
-  rfer:      '#8b5cf6',
-  dos:       '#14b8a6',
-  denied:    '#dc2626',
-  withdrawn: '#6b7280',
+  received:     '#3b82f6',
+  approved:     '#0ea800',
+  approval:     '#0ea800',
+  rejected:     '#700000',
+  rejection:    '#700000',
+  rfe:          '#f59e0b',
+  rfer:         '#8b5cf6',
+  rfe_response: '#8b5cf6',
+  dos:          '#00b6a1',
+  denied:       '#ff0000',
+  withdrawn:    '#434549',
+  withdrawal:   '#434549',
+  processing:   '#60a5fa',
+  expedite:     '#eb6505',
+  notice:       '#80e3f5',
+  biometrics:   '#b1cc16',
+  others:       '#a8a29e',
+  nan:          '#e2e8f0',
 };
 
 function colorFor(s) { return STATUS_COLORS[(s||'').toLowerCase()] || '#94a3b8'; }
