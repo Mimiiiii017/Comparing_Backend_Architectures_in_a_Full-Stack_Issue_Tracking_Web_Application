@@ -45,12 +45,11 @@ function fmtDate(iso) {
 }
 
 // ── Theme ──────────────────────────────────────────────────────────────────────
-function toggleTheme() {
-  const html = document.documentElement;
-  const isDark = html.getAttribute('data-theme') === 'dark';
-  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
-  document.querySelector('.theme-btn').textContent = isDark ? '☀︎' : '☾';
-  localStorage.setItem('vtv-theme', isDark ? 'light' : 'dark');
+function setTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('vtv-theme', theme);
+  const sel = document.getElementById('themeSelect');
+  if (sel) sel.value = theme;
   redrawCharts();
 }
 
@@ -110,7 +109,8 @@ async function doLogin() {
 (function restoreSession() {
   const saved = localStorage.getItem('vtv-theme') || 'light';
   document.documentElement.setAttribute('data-theme', saved);
-  document.querySelector('.theme-btn').textContent = saved === 'dark' ? '☾' : '☀︎';
+  const sel = document.getElementById('themeSelect');
+  if (sel) sel.value = saved;
   const savedRole = sessionStorage.getItem('vtv-role');
   if (savedRole) { currentRole = savedRole; showApp(); }
 })();
@@ -276,13 +276,34 @@ function buildPie(canvasId, labels, data, colors, legendId) {
   }
 }
 
+const STACK_ORDER = [
+  'received', 'processing', 'notice', 'approval', 'rfe', 'rfe_response',
+  'biometrics', 'expedite', 'withdrawal', 'others', 'nan', 'denied', 'rejected',
+];
+
 function toStackedDatasets(data) {
   const allStatuses = new Set();
-  Object.values(data).forEach(d => Object.keys(d).forEach(s => allStatuses.add(s)));
+  Object.values(data).forEach(d => Object.keys(d).forEach(s => allStatuses.add(s.toLowerCase())));
   const labels = Object.keys(data).sort();
-  const datasets = Array.from(allStatuses).map(status => ({
+
+  // Sort by STACK_ORDER (bottom to top); any unknown status goes after NaN
+  const sorted = Array.from(allStatuses).sort((a, b) => {
+    const ai = STACK_ORDER.indexOf(a);
+    const bi = STACK_ORDER.indexOf(b);
+    if (ai === -1 && bi === -1) return a.localeCompare(b);
+    if (ai === -1) return 1;
+    if (bi === -1) return -1;
+    return ai - bi;
+  });
+
+  const datasets = sorted.map(status => ({
     label: status,
-    data: labels.map(l => data[l][status] || 0),
+    data: labels.map(l => {
+      const entry = data[l];
+      // match case-insensitively
+      const key = Object.keys(entry).find(k => k.toLowerCase() === status);
+      return key ? entry[key] : 0;
+    }),
     backgroundColor: colorFor(status),
     stack: 'stack',
   }));
@@ -450,4 +471,5 @@ document.getElementById('searchCaseInput').addEventListener('keydown', e => { if
 // ── Init ───────────────────────────────────────────────────────────────────────
 const savedTheme = localStorage.getItem('vtv-theme') || 'light';
 document.documentElement.setAttribute('data-theme', savedTheme);
-document.querySelector('.theme-btn').textContent = savedTheme === 'dark' ? '☾' : '☀︎';
+const _initSel = document.getElementById('themeSelect');
+if (_initSel) _initSel.value = savedTheme;

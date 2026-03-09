@@ -48,40 +48,38 @@
       <!-- Test user arch tabs -->
       <nav class="arch-nav" id="archNav" style="display:none">
         <button class="arch-tab active" id="tabA" onclick="switchArch('A')">
-          <span class="arch-dot dot-a"></span>Architecture A — Monolithic
+          <span class="arch-dot dot-a"></span><span class="arch-label-long">Architecture A — Monolithic</span><span class="arch-label-short">Arch A</span>
         </button>
         <button class="arch-tab" id="tabB" onclick="switchArch('B')">
-          <span class="arch-dot dot-b"></span>Architecture B — Modular
+          <span class="arch-dot dot-b"></span><span class="arch-label-long">Architecture B — Modular</span><span class="arch-label-short">Arch B</span>
         </button>
       </nav>
     </div>
     <div class="header-actions">
       <div class="arch-badge" id="archBadge" style="display:none"></div>
-      <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme">☀︎</button>
+      <select class="theme-select" id="themeSelect" onchange="setTheme(this.value)" title="Choose theme">
+        <option value="light">Light Blue</option>
+        <option value="dark">Dark Blue</option>
+        <option value="light-purple">Purple</option>
+        <option value="light-green">Green</option>
+        <option value="light-pink">Pink</option>
+        <option value="light-teal">Teal</option>
+        <option value="light-orange">Orange</option>
+      </select>
       <button class="logout-btn" onclick="doLogout()">Sign out</button>
     </div>
   </header>
 
   <div class="page">
-    <div class="page-title">Case Dashboard</div>
-    <p class="page-sub" id="pageSub">I-129F K-1/K-2 visa case tracking</p>
-
-    <!-- Stats -->
-    <div class="stats-row">
-      <div class="stat-card">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Case Dashboard</div>
+        <p class="page-sub" id="pageSub">I-129F K-1/K-2 visa case tracking</p>
+      </div>
+      <div class="stat-card stat-card-inline">
         <div class="stat-label">Total Cases</div>
         <div class="stat-value" id="statTotal">—</div>
         <div class="stat-detail">in database</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Top Status</div>
-        <div class="stat-value" id="statStatus" style="font-size:18px;padding-top:6px">—</div>
-        <div class="stat-detail">most common</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Last Import</div>
-        <div class="stat-value" id="statImport" style="font-size:16px;padding-top:8px">—</div>
-        <div class="stat-detail">data freshness</div>
       </div>
     </div>
 
