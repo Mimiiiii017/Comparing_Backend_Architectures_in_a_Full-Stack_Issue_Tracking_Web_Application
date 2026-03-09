@@ -44,8 +44,9 @@ function toggleTheme() {
 }
 
 // ── Init — check session on page load ─────────────────────────────────────────
-if (document.getElementById('app')) {
 (async function init() {
+  if (!document.getElementById('app')) return;
+
   // Restore theme first
   const saved = localStorage.getItem('vtv-theme') || 'light';
   document.documentElement.setAttribute('data-theme', saved);
@@ -80,7 +81,6 @@ if (document.getElementById('app')) {
 
   loadAll();
 })();
-}
 
 // ── Logout ─────────────────────────────────────────────────────────────────────
 async function doLogout() {
