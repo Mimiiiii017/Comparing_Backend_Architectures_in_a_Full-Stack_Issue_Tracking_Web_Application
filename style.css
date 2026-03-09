@@ -625,7 +625,10 @@ select:focus, input[type="month"]:focus, input[type="date"]:focus {
 .chart-wrap { position: relative; height: 280px; }
 
 .legend { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 12px; }
-.legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); cursor: pointer; user-select: none; transition: opacity 0.15s; }
+.legend-item:hover { opacity: 0.75; }
+.legend-item.legend-hidden { opacity: 0.35; text-decoration: line-through; }
+.legend-item.legend-hidden .legend-dot { filter: grayscale(1); }
 .legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
 .legend-count { opacity: 0.75; }
 

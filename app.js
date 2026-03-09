@@ -232,9 +232,19 @@ function buildStackedBar(canvasId, labels, datasets, legendId) {
   });
 
   if (legendId) {
-    document.getElementById(legendId).innerHTML = datasets.map(d =>
-      `<div class="legend-item"><div class="legend-dot" style="background:${d.backgroundColor}"></div>${d.label}</div>`
+    document.getElementById(legendId).innerHTML = datasets.map((d, i) =>
+      `<div class="legend-item" data-canvas="${canvasId}" data-index="${i}"><div class="legend-dot" style="background:${d.backgroundColor}"></div>${d.label}</div>`
     ).join('');
+    document.getElementById(legendId).querySelectorAll('.legend-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const c = Chart.getChart(item.dataset.canvas);
+        const idx = parseInt(item.dataset.index);
+        const meta = c.getDatasetMeta(idx);
+        meta.hidden = !meta.hidden;
+        c.update();
+        item.classList.toggle('legend-hidden');
+      });
+    });
   }
 }
 
@@ -272,8 +282,17 @@ function buildPie(canvasId, labels, data, colors, legendId) {
 
   if (legendId) {
     document.getElementById(legendId).innerHTML = labels.map((label, i) =>
-      `<div class="legend-item"><div class="legend-dot" style="background:${colors[i]}"></div>${label} <span class="legend-count">(${data[i]})</span></div>`
+      `<div class="legend-item" data-canvas="${canvasId}" data-index="${i}"><div class="legend-dot" style="background:${colors[i]}"></div>${label} <span class="legend-count">(${data[i]})</span></div>`
     ).join('');
+    document.getElementById(legendId).querySelectorAll('.legend-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const c = Chart.getChart(item.dataset.canvas);
+        const idx = parseInt(item.dataset.index);
+        c.toggleDataVisibility(idx);
+        c.update();
+        item.classList.toggle('legend-hidden');
+      });
+    });
   }
 }
 
