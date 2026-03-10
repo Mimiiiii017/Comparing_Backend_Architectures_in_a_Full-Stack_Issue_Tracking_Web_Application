@@ -152,10 +152,30 @@
           <div class="legend" id="legendPieDayFiled"></div>
         </div>
 
-        <div class="card" style="grid-column: 1 / -1;">
+
+    <!-- Chart: Bar — Cases Worked on a Day by Filed Date -->
+    <div class="section">
+      <div class="section-title">Cases worked on a specific day — Bar Chart</div>
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Filing date breakdown of cases worked on a specific day</div>
+            <div class="card-sub">Pick a "worked on" date — bars show which filing cohorts were processed, stacked by status</div>
+          </div>
+          <div class="controls">
+            <input type="date" id="barDayWorkedInput" value="2025-08-05"/>
+            <button class="btn-secondary" onclick="loadBarDayWorked()">View</button>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="chartBarDayWorked"></canvas></div>
+        <div class="legend" id="legendBarDayWorked"></div>
+      </div>
+    </div>
+
+            <div class="card" style="grid-column: 1 / -1;">
           <div class="card-header">
             <div>
-              <div class="card-title">Cases worked on a specific day</div>
+              <div class="card-title">Cases worked on a specific day — Pie Chart</div>
               <div class="card-sub">Based on Last Received Date — shows what was processed that day</div>
             </div>
             <div class="controls">
@@ -172,28 +192,6 @@
       </div>
     </div>
 
-    <!-- WAC Position Finder -->
-    <div class="section">
-      <div class="section-title">Your Queue Position</div>
-      <div class="card">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Find your place in line</div>
-            <div class="card-sub">Enter your case number to see how many pending cases were filed before yours</div>
-          </div>
-        </div>
-        <div class="search-box">
-          <input class="search-input" type="text" id="wacInput" placeholder="e.g. 2590183266" maxlength="20"/>
-          <button class="btn-secondary" onclick="findPosition()">Find Position</button>
-        </div>
-        <div class="position-result" id="positionResult">
-          <div class="position-number" id="positionNumber">—</div>
-          <div class="position-label">cases filed before yours are still pending</div>
-          <div class="position-meta" id="positionMeta"></div>
-        </div>
-        <div id="positionError" style="display:none;color:#ef4444;font-size:13px;margin-top:10px"></div>
-      </div>
-    </div>
 
     <!-- Case Search -->
     <div class="section">

@@ -247,6 +247,7 @@ function loadAll() {
   loadPieMonth();
   loadPieDayFiled();
   loadPieDayWorked();
+  loadBarDayWorked();
 }
 
 // ── Stats ──────────────────────────────────────────────────────────────────────
@@ -507,38 +508,21 @@ async function loadPieDayWorked() {
   } catch {}
 }
 
-function redrawCharts() {
-  loadByMonth(); loadByDay(); loadPieMonth(); loadPieDayFiled(); loadPieDayWorked();
-}
 
-// ── Position finder ────────────────────────────────────────────────────────────
-async function findPosition() {
-  const wac = document.getElementById('wacInput').value.trim();
-  if (!wac) return;
-  document.getElementById('positionResult').classList.remove('visible');
-  document.getElementById('positionError').style.display = 'none';
-
+async function loadBarDayWorked() {
+  const date = document.getElementById('barDayWorkedInput').value;
+  if (!date) return;
   try {
-    const res = await fetch(`${API}/api/position?wac=${encodeURIComponent(wac)}`, { credentials: 'include' });
+    const res = await fetch(`${API}/api/charts/bar-day-worked?date=${date}`, { credentials: 'include' });
     const d = await res.json();
-    if (!res.ok) {
-      document.getElementById('positionError').style.display = 'block';
-      document.getElementById('positionError').textContent = d.detail || 'Case not found';
-      return;
-    }
-    document.getElementById('positionNumber').textContent = d.cases_ahead.toLocaleString();
-    document.getElementById('positionMeta').innerHTML =
-      `<strong>${d.case_number}</strong> &nbsp;·&nbsp;
-       Filed: <strong>${fmtDate(d.application_filed_date)}</strong> &nbsp;·&nbsp;
-       Status: <strong>${d.current_status}</strong>`;
-    document.getElementById('positionResult').classList.add('visible');
-  } catch {
-    document.getElementById('positionError').style.display = 'block';
-    document.getElementById('positionError').textContent = 'Could not reach the server.';
-  }
+    const { labels, datasets } = toStackedDatasets(d.data);
+    buildStackedBar('chartBarDayWorked', labels, datasets, 'legendBarDayWorked');
+  } catch {}
 }
 
-document.getElementById('wacInput').addEventListener('keydown', e => { if (e.key === 'Enter') findPosition(); });
+function redrawCharts() {
+  loadByMonth(); loadByDay(); loadPieMonth(); loadPieDayFiled(); loadPieDayWorked(); loadBarDayWorked();
+}
 
 // ── Case search ────────────────────────────────────────────────────────────────
 async function searchByCase() {
