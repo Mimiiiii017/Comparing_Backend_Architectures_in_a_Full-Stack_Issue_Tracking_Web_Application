@@ -152,14 +152,17 @@
           <div class="legend" id="legendPieDayFiled"></div>
         </div>
 
+      </div>
+    </div>
 
+    
     <!-- Chart: Bar — Cases Worked on a Day by Filed Date -->
     <div class="section">
-      <div class="section-title">Cases worked on a specific day — Bar Chart</div>
+      <div class="section-title">Cases worked on a specific days</div>
       <div class="card">
         <div class="card-header">
           <div>
-            <div class="card-title">Filing date breakdown of cases worked on a specific day</div>
+            <div class="card-title">Cases worked on a specific day — Bar Chart</div>
             <div class="card-sub">Pick a "worked on" date — bars show which filing cohorts were processed, stacked by status</div>
           </div>
           <div class="controls">
@@ -170,28 +173,25 @@
         <div class="chart-wrap"><canvas id="chartBarDayWorked"></canvas></div>
         <div class="legend" id="legendBarDayWorked"></div>
       </div>
-    </div>
-
-            <div class="card" style="grid-column: 1 / -1;">
-          <div class="card-header">
-            <div>
-              <div class="card-title">Cases worked on a specific day — Pie Chart</div>
-              <div class="card-sub">Based on Last Received Date — shows what was processed that day</div>
-            </div>
-            <div class="controls">
-              <input type="date" id="pieDayWorkedInput" value="2025-08-05"/>
-              <button class="btn-secondary" onclick="loadPieDayWorked()">View</button>
-            </div>
+      <br/>
+      <br/>
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Cases worked on a specific day — Pie Chart</div>
+            <div class="card-sub">Based on Last Received Date — shows what was processed that day</div>
           </div>
-          <div style="max-width:400px;margin:0 auto">
-            <div class="chart-wrap" style="height:220px"><canvas id="chartPieDayWorked"></canvas></div>
+          <div class="controls">
+            <input type="date" id="pieDayWorkedInput" value="2025-08-05"/>
+            <button class="btn-secondary" onclick="loadPieDayWorked()">View</button>
           </div>
-          <div class="legend" id="legendPieDayWorked"></div>
         </div>
-
+        <div style="max-width:400px;margin:0 auto">
+          <div class="chart-wrap" style="height:220px"><canvas id="chartPieDayWorked"></canvas></div>
+        </div>
+        <div class="legend" id="legendPieDayWorked"></div>
       </div>
     </div>
-
 
     <!-- Case Search -->
     <div class="section">
