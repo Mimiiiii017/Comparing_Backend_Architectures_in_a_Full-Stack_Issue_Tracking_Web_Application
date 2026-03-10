@@ -12,30 +12,59 @@ let API = API_A;
 // ── Status colours ─────────────────────────────────────────────────────────────
 const STATUS_COLORS = {
   received:     '#498dfa',
-  approved:     '#0ea800',
   approval:     '#0ea800',
-  rejected:     '#9b0000',
-  rejection:    '#9b0000',
+  processing:   '#60a5fa',
+  notice:       '#80e3f5',
   rfe:          '#f59e0b',
   rfer:         '#8b5cf6',
-  rfe_response: '#8b5cf6',
-  dos:          '#00b6a1',
-  denied:       '#ff0000',
-  withdrawn:    '#434549',
-  withdrawal:   '#434549',
-  processing:   '#60a5fa',
-  expedite:     '#eb6505',
-  notice:       '#80e3f5',
   biometrics:   '#b1cc16',
+  withdrawal:   '#434549',
+  expedite:     '#eb6505',
+  dos:          '#00b6a1',
   others:       '#a8a29e',
-  nan:          '#e2e8f0',
-  transferred:  '#f97316',
+  denied:       '#ff0000',
+  rejected:     '#9b0000',
+  closed:       '#64748b',
+  return:       '#2563eb',
+  document_mailed: '#7c8fb0',
+  reopened:     '#3b82f6',
+  revocation:   '#6b21a8',
 };
 
-function colorFor(s) { return STATUS_COLORS[(s||'').toLowerCase()] || '#94a3b8'; }
+function normalizeStatusKey(s) {
+  return (s || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[\s-]+/g, '_');
+}
+
+const STATUS_CANONICAL = {
+  filed: 'received',
+  approved: 'approval',
+  transferred: 'dos',
+  tranferred: 'dos',
+  rfe_response: 'rfer',
+  rfe_response_received: 'rfer',
+  rfer_response: 'rfer',
+  rfer_responce_recieved: 'rfer',
+  withdrawn: 'withdrawal',
+  withdrawat: 'withdrawal',
+  rejection: 'rejected',
+};
+
+function canonicalStatusKey(s) {
+  const k = normalizeStatusKey(s);
+  return STATUS_CANONICAL[k] || k;
+}
+
+function statusLabelFor(s) {
+  return canonicalStatusKey(s);
+}
+
+function colorFor(s) { return STATUS_COLORS[canonicalStatusKey(s)] || '#94a3b8'; }
 
 function badgeFor(s) {
-  const k = (s||'').toLowerCase();
+  const k = canonicalStatusKey(s);
   const cls = STATUS_COLORS[k] ? `badge-${k}` : 'badge-default';
   return `<span class="badge ${cls}">${s||'—'}</span>`;
 }
@@ -297,32 +326,77 @@ function buildPie(canvasId, labels, data, colors, legendId) {
 }
 
 const STACK_ORDER = [
-  'received', 'processing', 'notice', 'approval', 'rfe', 'rfe_response',
-  'biometrics', 'expedite', 'withdrawal', 'transferred', 'others', 'nan', 'denied', 'rejected',
+  'received',
+  'processing',
+  'notice',
+  'approval',
+  'dos',
+  'rfe',
+  'rfer',
+  'biometrics',
+  'expedite',
+  'denied',
+  'rejected',
+  'withdrawal',
+  'closed',
+  'return',
+  'reopened',
+  'document_mailed',
+  'revocation',
+  'others',
 ];
 
-function toStackedDatasets(data) {
-  const allStatuses = new Set();
-  Object.values(data).forEach(d => Object.keys(d).forEach(s => allStatuses.add(s.toLowerCase())));
-  const labels = Object.keys(data).sort();
+function compareStatusOrder(a, b) {
+  const ai = STACK_ORDER.indexOf(a);
+  const bi = STACK_ORDER.indexOf(b);
+  if (ai === -1 && bi === -1) return a.localeCompare(b);
+  if (ai === -1) return 1;
+  if (bi === -1) return -1;
+  return ai - bi;
+}
 
-  // Sort by STACK_ORDER (bottom to top); any unknown status goes after NaN
-  const sorted = Array.from(allStatuses).sort((a, b) => {
-    const ai = STACK_ORDER.indexOf(a);
-    const bi = STACK_ORDER.indexOf(b);
-    if (ai === -1 && bi === -1) return a.localeCompare(b);
-    if (ai === -1) return 1;
-    if (bi === -1) return -1;
-    return ai - bi;
+function aggregateStatusMap(entry) {
+  const out = {};
+  Object.entries(entry || {}).forEach(([status, count]) => {
+    const k = canonicalStatusKey(status);
+    out[k] = (out[k] || 0) + (Number(count) || 0);
   });
+  return out;
+}
+
+function canonicalizeSeriesMap(data) {
+  const out = {};
+  Object.entries(data || {}).forEach(([label, entry]) => {
+    out[label] = aggregateStatusMap(entry);
+  });
+  return out;
+}
+
+function aggregatePieRows(rows) {
+  const totals = {};
+  (rows || []).forEach(r => {
+    const k = canonicalStatusKey(r.status);
+    totals[k] = (totals[k] || 0) + (Number(r.count) || 0);
+  });
+  return Object.keys(totals)
+    .sort(compareStatusOrder)
+    .map(status => ({ status, count: totals[status] }));
+}
+
+function toStackedDatasets(data) {
+  const canonicalData = canonicalizeSeriesMap(data);
+  const allStatuses = new Set();
+  Object.values(canonicalData).forEach(d => Object.keys(d).forEach(s => allStatuses.add(s)));
+  const labels = Object.keys(canonicalData).sort();
+
+  // Sort by STACK_ORDER (bottom to top); unknown statuses go at the end
+  const sorted = Array.from(allStatuses).sort(compareStatusOrder);
 
   const datasets = sorted.map(status => ({
-    label: status,
+    label: statusLabelFor(status),
     data: labels.map(l => {
-      const entry = data[l];
-      // match case-insensitively
-      const key = Object.keys(entry).find(k => k.toLowerCase() === status);
-      return key ? entry[key] : 0;
+      const entry = canonicalData[l] || {};
+      return entry[status] || 0;
     }),
     backgroundColor: colorFor(status),
     stack: 'stack',
@@ -356,26 +430,18 @@ async function loadByDay() {
     });
     const displayLabels = allDayKeys.map(k => String(parseInt(k.split('-')[2])));
 
-    const data = d.data || {};
+    const data = canonicalizeSeriesMap(d.data || {});
     const allStatuses = new Set();
-    Object.values(data).forEach(dd => Object.keys(dd).forEach(s => allStatuses.add(s.toLowerCase())));
+    Object.values(data).forEach(dd => Object.keys(dd).forEach(s => allStatuses.add(s)));
 
-    const sorted = Array.from(allStatuses).sort((a, b) => {
-      const ai = STACK_ORDER.indexOf(a);
-      const bi = STACK_ORDER.indexOf(b);
-      if (ai === -1 && bi === -1) return a.localeCompare(b);
-      if (ai === -1) return 1;
-      if (bi === -1) return -1;
-      return ai - bi;
-    });
+    const sorted = Array.from(allStatuses).sort(compareStatusOrder);
 
     const datasets = sorted.map(status => ({
-      label: status,
+      label: statusLabelFor(status),
       data: allDayKeys.map(day => {
-        const entry = data[day];
+        const entry = data[day] || {};
         if (!entry) return 0;
-        const key = Object.keys(entry).find(k => k.toLowerCase() === status);
-        return key ? entry[key] : 0;
+        return entry[status] || 0;
       }),
       backgroundColor: colorFor(status),
       stack: 'stack',
@@ -391,7 +457,8 @@ async function loadPieMonth() {
   try {
     const res = await fetch(`${API}/api/charts/pie-month?month=${month}`, { credentials: 'include' });
     const d = await res.json();
-    buildPie('chartPieMonth', d.data.map(r=>r.status), d.data.map(r=>r.count), d.data.map(r=>colorFor(r.status)), 'legendPieMonth');
+    const rows = aggregatePieRows(d.data);
+    buildPie('chartPieMonth', rows.map(r=>statusLabelFor(r.status)), rows.map(r=>r.count), rows.map(r=>colorFor(r.status)), 'legendPieMonth');
   } catch {}
 }
 
@@ -401,8 +468,9 @@ async function loadPieDayFiled() {
   try {
     const res = await fetch(`${API}/api/charts/pie-day-filed?date=${date}`, { credentials: 'include' });
     const d = await res.json();
-    if (!d.data.length) return;
-    buildPie('chartPieDayFiled', d.data.map(r=>r.status), d.data.map(r=>r.count), d.data.map(r=>colorFor(r.status)), 'legendPieDayFiled');
+    const rows = aggregatePieRows(d.data);
+    if (!rows.length) return;
+    buildPie('chartPieDayFiled', rows.map(r=>statusLabelFor(r.status)), rows.map(r=>r.count), rows.map(r=>colorFor(r.status)), 'legendPieDayFiled');
   } catch {}
 }
 
@@ -412,8 +480,9 @@ async function loadPieDayWorked() {
   try {
     const res = await fetch(`${API}/api/charts/pie-day-worked?date=${date}`, { credentials: 'include' });
     const d = await res.json();
-    if (!d.data.length) return;
-    buildPie('chartPieDayWorked', d.data.map(r=>r.status), d.data.map(r=>r.count), d.data.map(r=>colorFor(r.status)), 'legendPieDayWorked');
+    const rows = aggregatePieRows(d.data);
+    if (!rows.length) return;
+    buildPie('chartPieDayWorked', rows.map(r=>statusLabelFor(r.status)), rows.map(r=>r.count), rows.map(r=>colorFor(r.status)), 'legendPieDayWorked');
   } catch {}
 }
 

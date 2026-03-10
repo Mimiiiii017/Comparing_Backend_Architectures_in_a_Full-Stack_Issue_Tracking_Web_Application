@@ -695,14 +695,22 @@ select:focus, input[type="month"]:focus, input[type="date"]:focus {
   letter-spacing: 0.05em;
 }
 
-.badge-received    { background: rgba(59,130,246,0.12);  color: #3b82f6; }
-.badge-approved    { background: rgba(16,185,129,0.12);  color: #10b981; }
-.badge-rejected    { background: rgba(239,68,68,0.12);   color: #ef4444; }
-.badge-rfe         { background: rgba(245,158,11,0.12);  color: #f59e0b; }
-.badge-rfer        { background: rgba(139,92,246,0.12);  color: #8b5cf6; }
-.badge-dos         { background: rgba(20,184,166,0.12);  color: #14b8a6; }
-.badge-denied      { background: rgba(239,68,68,0.12);   color: #ef4444; }
-.badge-withdrawn   { background: rgba(107,114,128,0.12); color: #6b7280; }
+.badge-received    { background: rgba(73,141,250,0.14);  color: #498dfa; }
+.badge-processing  { background: rgba(96,165,250,0.14);  color: #60a5fa; }
+.badge-notice      { background: rgba(128,227,245,0.2);  color: #0e7490; }
+.badge-approval    { background: rgba(14,168,0,0.14);    color: #0ea800; }
+.badge-rfe         { background: rgba(245,158,11,0.16);  color: #b45309; }
+.badge-rfer        { background: rgba(139,92,246,0.16);  color: #8b5cf6; }
+.badge-biometrics  { background: rgba(177,204,22,0.2);   color: #4d7c0f; }
+.badge-withdrawal  { background: rgba(67,69,73,0.14);    color: #434549; }
+.badge-expedite    { background: rgba(235,101,5,0.16);   color: #c2410c; }
+.badge-dos         { background: rgba(0,182,161,0.14);   color: #0f766e; }
+.badge-others      { background: rgba(168,162,158,0.2);  color: #78716c; }
+.badge-denied      { background: rgba(255,0,0,0.14);     color: #b91c1c; }
+.badge-closed      { background: rgba(100,116,139,0.14); color: #475569; }
+.badge-document_mailed { background: rgba(124,143,176,0.18); color: #475569; }
+.badge-reopened    { background: rgba(59,130,246,0.14);  color: #1d4ed8; }
+.badge-revocation  { background: rgba(107,33,168,0.15);  color: #6b21a8; }
 .badge-default     { background: rgba(100,116,139,0.12); color: #64748b; }
 
 /* ── POSITION FINDER ─────────────────────────────────────────────────────────── */
