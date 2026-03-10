@@ -58,10 +58,33 @@ function canonicalStatusKey(s) {
 }
 
 function statusLabelFor(s) {
-  return canonicalStatusKey(s);
+  const k = canonicalStatusKey(s);
+  if (k === 'others') {
+    return 'others (biometrics, reopened, document_mailed, revocation, closed, notice)';
+  }
+  return k;
 }
 
 function colorFor(s) { return STATUS_COLORS[canonicalStatusKey(s)] || '#94a3b8'; }
+
+// Use a tighter palette for charts so legends are easier to scan.
+const CHART_STATUS_COLORS = {
+  received:   '#3b82f6',
+  processing: '#7fb9ff',
+  approval:   '#22c55e',
+  dos:        '#d228be',
+  rfe:        '#ffd58d',
+  rfer:       '#ffad20',
+  expedite:   '#fff82d',
+  denied:     '#f73939',
+  rejected:   '#b91c1c',
+  withdrawal: '#64748b',
+  others:     '#94a3b8',
+};
+
+function chartColorFor(s) {
+  return CHART_STATUS_COLORS[chartStatusKey(s)] || '#94a3b8';
+}
 
 function badgeFor(s) {
   const k = canonicalStatusKey(s);
@@ -328,23 +351,32 @@ function buildPie(canvasId, labels, data, colors, legendId) {
 const STACK_ORDER = [
   'received',
   'processing',
-  'notice',
   'approval',
   'dos',
   'rfe',
   'rfer',
-  'biometrics',
   'expedite',
   'denied',
   'rejected',
   'withdrawal',
-  'closed',
-  'return',
+  'others',
+];
+
+const LEGEND_STATUSES = [...STACK_ORDER];
+
+const OTHER_STATUS_BUCKET = new Set([
+  'biometrics',
   'reopened',
   'document_mailed',
   'revocation',
-  'others',
-];
+  'closed',
+  'notice',
+]);
+
+function chartStatusKey(s) {
+  const k = canonicalStatusKey(s);
+  return OTHER_STATUS_BUCKET.has(k) ? 'others' : k;
+}
 
 function compareStatusOrder(a, b) {
   const ai = STACK_ORDER.indexOf(a);
@@ -358,7 +390,7 @@ function compareStatusOrder(a, b) {
 function aggregateStatusMap(entry) {
   const out = {};
   Object.entries(entry || {}).forEach(([status, count]) => {
-    const k = canonicalStatusKey(status);
+    const k = chartStatusKey(status);
     out[k] = (out[k] || 0) + (Number(count) || 0);
   });
   return out;
@@ -375,30 +407,23 @@ function canonicalizeSeriesMap(data) {
 function aggregatePieRows(rows) {
   const totals = {};
   (rows || []).forEach(r => {
-    const k = canonicalStatusKey(r.status);
+    const k = chartStatusKey(r.status);
     totals[k] = (totals[k] || 0) + (Number(r.count) || 0);
   });
-  return Object.keys(totals)
-    .sort(compareStatusOrder)
-    .map(status => ({ status, count: totals[status] }));
+  return LEGEND_STATUSES.map(status => ({ status, count: totals[status] || 0 }));
 }
 
 function toStackedDatasets(data) {
   const canonicalData = canonicalizeSeriesMap(data);
-  const allStatuses = new Set();
-  Object.values(canonicalData).forEach(d => Object.keys(d).forEach(s => allStatuses.add(s)));
   const labels = Object.keys(canonicalData).sort();
 
-  // Sort by STACK_ORDER (bottom to top); unknown statuses go at the end
-  const sorted = Array.from(allStatuses).sort(compareStatusOrder);
-
-  const datasets = sorted.map(status => ({
+  const datasets = LEGEND_STATUSES.map(status => ({
     label: statusLabelFor(status),
     data: labels.map(l => {
       const entry = canonicalData[l] || {};
       return entry[status] || 0;
     }),
-    backgroundColor: colorFor(status),
+    backgroundColor: chartColorFor(status),
     stack: 'stack',
   }));
   return { labels, datasets };
@@ -431,19 +456,15 @@ async function loadByDay() {
     const displayLabels = allDayKeys.map(k => String(parseInt(k.split('-')[2])));
 
     const data = canonicalizeSeriesMap(d.data || {});
-    const allStatuses = new Set();
-    Object.values(data).forEach(dd => Object.keys(dd).forEach(s => allStatuses.add(s)));
 
-    const sorted = Array.from(allStatuses).sort(compareStatusOrder);
-
-    const datasets = sorted.map(status => ({
+    const datasets = LEGEND_STATUSES.map(status => ({
       label: statusLabelFor(status),
       data: allDayKeys.map(day => {
         const entry = data[day] || {};
         if (!entry) return 0;
         return entry[status] || 0;
       }),
-      backgroundColor: colorFor(status),
+      backgroundColor: chartColorFor(status),
       stack: 'stack',
     }));
 
@@ -458,7 +479,7 @@ async function loadPieMonth() {
     const res = await fetch(`${API}/api/charts/pie-month?month=${month}`, { credentials: 'include' });
     const d = await res.json();
     const rows = aggregatePieRows(d.data);
-    buildPie('chartPieMonth', rows.map(r=>statusLabelFor(r.status)), rows.map(r=>r.count), rows.map(r=>colorFor(r.status)), 'legendPieMonth');
+    buildPie('chartPieMonth', rows.map(r=>statusLabelFor(r.status)), rows.map(r=>r.count), rows.map(r=>chartColorFor(r.status)), 'legendPieMonth');
   } catch {}
 }
 
@@ -470,7 +491,7 @@ async function loadPieDayFiled() {
     const d = await res.json();
     const rows = aggregatePieRows(d.data);
     if (!rows.length) return;
-    buildPie('chartPieDayFiled', rows.map(r=>statusLabelFor(r.status)), rows.map(r=>r.count), rows.map(r=>colorFor(r.status)), 'legendPieDayFiled');
+    buildPie('chartPieDayFiled', rows.map(r=>statusLabelFor(r.status)), rows.map(r=>r.count), rows.map(r=>chartColorFor(r.status)), 'legendPieDayFiled');
   } catch {}
 }
 
@@ -482,7 +503,7 @@ async function loadPieDayWorked() {
     const d = await res.json();
     const rows = aggregatePieRows(d.data);
     if (!rows.length) return;
-    buildPie('chartPieDayWorked', rows.map(r=>statusLabelFor(r.status)), rows.map(r=>r.count), rows.map(r=>colorFor(r.status)), 'legendPieDayWorked');
+    buildPie('chartPieDayWorked', rows.map(r=>statusLabelFor(r.status)), rows.map(r=>r.count), rows.map(r=>chartColorFor(r.status)), 'legendPieDayWorked');
   } catch {}
 }
 
