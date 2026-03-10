@@ -97,6 +97,38 @@ function fmtDate(iso) {
   return new Date(iso).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
 }
 
+function toDateInputValue(d) {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function toMonthInputValue(d) {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}`;
+}
+
+function setInitialFilterDefaults() {
+  const now = new Date();
+  const lastWeek = new Date(now);
+  lastWeek.setDate(now.getDate() - 7);
+  const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+  const defaults = {
+    byDayMonth: toMonthInputValue(lastMonth),
+    pieMonthInput: toMonthInputValue(lastMonth),
+    pieDayFiledInput: toDateInputValue(lastWeek),
+    barDayWorkedInput: toDateInputValue(lastWeek),
+  };
+
+  Object.entries(defaults).forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = value;
+  });
+}
+
 // ── Theme ──────────────────────────────────────────────────────────────────────
 function setTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
@@ -160,6 +192,7 @@ async function doLogin() {
 
 // ── Restore session on page load ───────────────────────────────────────────────
 (function restoreSession() {
+  setInitialFilterDefaults();
   const saved = localStorage.getItem('vtv-theme') || 'light';
   document.documentElement.setAttribute('data-theme', saved);
   const sel = document.getElementById('themeSelect');
@@ -246,8 +279,17 @@ function loadAll() {
   loadByDay();
   loadPieMonth();
   loadPieDayFiled();
-  loadPieDayWorked();
+  loadWorkedDayCharts();
+}
+
+function getWorkedDayDate() {
+  const date = document.getElementById('barDayWorkedInput')?.value;
+  return date || '';
+}
+
+function loadWorkedDayCharts() {
   loadBarDayWorked();
+  loadPieDayWorked();
 }
 
 // ── Stats ──────────────────────────────────────────────────────────────────────
@@ -497,7 +539,7 @@ async function loadPieDayFiled() {
 }
 
 async function loadPieDayWorked() {
-  const date = document.getElementById('pieDayWorkedInput').value;
+  const date = getWorkedDayDate();
   if (!date) return;
   try {
     const res = await fetch(`${API}/api/charts/pie-day-worked?date=${date}`, { credentials: 'include' });
@@ -510,7 +552,7 @@ async function loadPieDayWorked() {
 
 
 async function loadBarDayWorked() {
-  const date = document.getElementById('barDayWorkedInput').value;
+  const date = getWorkedDayDate();
   if (!date) return;
   try {
     const res = await fetch(`${API}/api/charts/bar-day-worked?date=${date}`, { credentials: 'include' });
@@ -521,7 +563,7 @@ async function loadBarDayWorked() {
 }
 
 function redrawCharts() {
-  loadByMonth(); loadByDay(); loadPieMonth(); loadPieDayFiled(); loadPieDayWorked(); loadBarDayWorked();
+  loadByMonth(); loadByDay(); loadPieMonth(); loadPieDayFiled(); loadWorkedDayCharts();
 }
 
 // ── Case search ────────────────────────────────────────────────────────────────

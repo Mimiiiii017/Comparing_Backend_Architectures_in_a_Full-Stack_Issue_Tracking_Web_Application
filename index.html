@@ -108,7 +108,7 @@
             <div class="card-sub">Based on Application Filed Date</div>
           </div>
           <div class="controls">
-            <input type="month" id="byDayMonth" value="2025-08"/>
+            <input type="month" id="byDayMonth"/>
             <button class="btn-secondary" onclick="loadByDay()">View</button>
           </div>
         </div>
@@ -129,7 +129,7 @@
               <div class="card-sub">Application Filed Date</div>
             </div>
             <div class="controls">
-              <input type="month" id="pieMonthInput" value="2025-08"/>
+              <input type="month" id="pieMonthInput"/>
               <button class="btn-secondary" onclick="loadPieMonth()">View</button>
             </div>
           </div>
@@ -144,7 +144,7 @@
               <div class="card-sub">Application Filed Date</div>
             </div>
             <div class="controls">
-              <input type="date" id="pieDayFiledInput" value="2025-08-01"/>
+              <input type="date" id="pieDayFiledInput"/>
               <button class="btn-secondary" onclick="loadPieDayFiled()">View</button>
             </div>
           </div>
@@ -166,8 +166,8 @@
             <div class="card-sub">Pick a "worked on" date — bars show which filing cohorts were processed, stacked by status</div>
           </div>
           <div class="controls">
-            <input type="date" id="barDayWorkedInput" value="2025-08-05"/>
-            <button class="btn-secondary" onclick="loadBarDayWorked()">View</button>
+            <input type="date" id="barDayWorkedInput"/>
+            <button class="btn-secondary" onclick="loadWorkedDayCharts()">View</button>
           </div>
         </div>
         <div class="chart-wrap"><canvas id="chartBarDayWorked"></canvas></div>
@@ -177,10 +177,6 @@
           <div>
             <div class="card-title">Cases worked on a specific day — Pie Chart</div>
             <div class="card-sub">Based on Last Received Date — shows what was processed that day</div>
-          </div>
-          <div class="controls">
-            <input type="date" id="pieDayWorkedInput" value="2025-08-05"/>
-            <button class="btn-secondary" onclick="loadPieDayWorked()">View</button>
           </div>
         </div>
         <div style="max-width:400px;margin:0 auto">
