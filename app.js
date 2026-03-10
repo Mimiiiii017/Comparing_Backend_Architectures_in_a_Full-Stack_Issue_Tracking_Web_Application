@@ -60,7 +60,7 @@ function canonicalStatusKey(s) {
 function statusLabelFor(s) {
   const k = canonicalStatusKey(s);
   if (k === 'others') {
-    return 'others (biometrics, reopened, document_mailed, revocation, closed, notice)';
+    return 'others';
   }
   return k;
 }
